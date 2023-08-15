@@ -1,31 +1,30 @@
 interfaces {
     bridge br75001 {
-        address 10.203.245.1/24
-        description blue
+        address 172.16.10.1/24
+        description "VRF red"
         member {
-            interface eth1.245 {
+            interface eth1.10 {
             }
             interface vxlan75001 {
             }
         }
-        vrf blue
+        vrf red
     }
     bridge br75002 {
-        address 10.203.248.1/24
-        description red
+        address 172.16.20.1/24
+        description "VRF blue"
         member {
-            interface eth1.248 {
+            interface eth1.20 {
             }
             interface vxlan75002 {
             }
         }
-        vrf red
+        vrf blue
     }
     dummy dum0 {
-        address 192.168.100.101/32
+        address 192.168.100.100/32
     }
     dummy dum1 {
-        address 192.168.100.100/32
     }
     ethernet eth0 {
         address 10.203.0.240/24
@@ -36,6 +35,14 @@ interfaces {
     ethernet eth1 {
         hw-id 00:50:56:b3:ce:86
         mtu 9000
+        vif 10 {
+            description "Tenant Red VLAN"
+            mtu 1500
+        }
+        vif 20 {
+            description "Tenant Blue VLAN"
+            mtu 1500
+        }
         vif 240 {
             address 10.203.240.1/24
             description Management
@@ -62,20 +69,22 @@ interfaces {
             mtu 9000
         }
         vif 245 {
+            address 10.203.245.1/24
             description "Service VM Management"
             mtu 1500
         }
         vif 246 {
             address 10.203.246.1/24
             description "NSX Edge Uplink #1"
-            mtu 1600
+            mtu 1700
         }
         vif 247 {
             address 10.203.247.1/24
             description "NSX Edge Uplink #2"
-            mtu 1600
+            mtu 1700
         }
         vif 248 {
+            address 10.203.248.1/24
             description "RTEP Transport"
             mtu 1500
         }
@@ -93,7 +102,7 @@ interfaces {
             nolearning
         }
         port 4789
-        source-address 192.168.100.101
+        source-address 192.168.100.100
         vni 75001
     }
     vxlan vxlan75002 {
@@ -112,15 +121,9 @@ protocols {
             ipv4-unicast {
                 network 192.168.100.100/32 {
                 }
-                network 192.168.100.101/32 {
-                }
             }
             l2vpn-evpn {
                 advertise {
-                    ipv4 {
-                        unicast {
-                        }
-                    }
                 }
                 advertise-all-vni
             }
@@ -143,7 +146,7 @@ protocols {
                 }
             }
             description Pod-240-T0-EdgeVM-01-1
-            ebgp-multihop 3
+            ebgp-multihop 1
             remote-as 65241
         }
         neighbor 10.203.246.3 {
@@ -156,7 +159,7 @@ protocols {
                 }
             }
             description Pod-240-T0-EdgeVM-02-1
-            ebgp-multihop 3
+            ebgp-multihop 1
             remote-as 65241
         }
         neighbor 10.203.247.2 {
@@ -169,7 +172,7 @@ protocols {
                 }
             }
             description Pod-240-T0-EdgeVM-01-2
-            ebgp-multihop 3
+            ebgp-multihop 1
             remote-as 65241
         }
         neighbor 10.203.247.3 {
@@ -182,10 +185,11 @@ protocols {
                 }
             }
             description Pod-240-T0-EdgeVM-02-2
-            ebgp-multihop 3
+            ebgp-multihop 1
             remote-as 65241
         }
         parameters {
+            log-neighbor-changes
             router-id 10.203.240.1
         }
         system-as 65240
@@ -296,7 +300,7 @@ system {
         }
         user vyos {
             authentication {
-                encrypted-password $6$rounds=656000$2IsRjwn51/XIOsz5$BpWOEtOpU1EAqwZh9Hdmy9qPIcg/5EVbNzsIiN4/wvnl3WDHtr9.Jrcdr55AlCOzszGR5N/VG24uchZAZh4.40
+                encrypted-password ****************
             }
         }
     }
@@ -337,10 +341,10 @@ vrf {
                                 }
                             }
                         }
-                        rd 65240:1
+                        rd 65240:2
                         route-target {
-                            export 65240:1
-                            import 65241:1
+                            export 65240:2
+                            import 65241:2
                         }
                     }
                 }
@@ -348,7 +352,7 @@ vrf {
             }
         }
         table 1001
-        vni 75001
+        vni 75002
     }
     name red {
         protocols {
@@ -367,10 +371,10 @@ vrf {
                                 }
                             }
                         }
-                        rd 65240:2
+                        rd 65240:1
                         route-target {
-                            export 65240:2
-                            import 65241:2
+                            export 65240:1
+                            import 65241:1
                         }
                     }
                 }
@@ -378,11 +382,6 @@ vrf {
             }
         }
         table 1002
-        vni 75002
+        vni 75001
     }
 }
-
-
-// Warning: Do not remove the following line.
-// vyos-config-version: "bgp@4:broadcast-relay@1:cluster@1:config-management@1:conntrack@3:conntrack-sync@2:container@1:dhcp-relay@2:dhcp-server@6:dhcpv6-server@1:dns-dynamic@1:dns-forwarding@4:firewall@10:flow-accounting@1:https@4:ids@1:interfaces@29:ipoe-server@1:ipsec@12:isis@3:l2tp@4:lldp@1:mdns@1:monitoring@1:nat@5:nat66@1:ntp@3:openconnect@2:ospf@2:policy@5:pppoe-server@6:pptp@2:qos@2:quagga@11:rip@1:rpki@1:salt@1:snmp@3:ssh@2:sstp@4:system@26:vrf@3:vrrp@4:vyos-accel-ppp@2:wanloadbalance@3:webproxy@2"
-// Release version: 1.4-rolling-202307270317
